@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제안 심사 보조 — TOP 제안활동 시스템</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #F2F3F6;
+  --card:     #FFFFFF;
+  --border:   #E3E6EC;
+  --divider:  #EDF0F3;
+  --lbl-bg:   #F6F7FA;
+  --accent:   #E7711E;
+  --accent-d: #C45E18;
+  --bar:      #DC4B0F;
+  --txt-1:    #1B2230;
+  --txt-2:    #5A6370;
+  --txt-3:    #8C95A1;
+  --good-bg:  #E6F5EE; --good-fg: #1A7A42;
+  --bad-bg:   #FBEAEA; --bad-fg:  #C0392B;
+  --warn-bg:  #FEF0D8; --warn-fg: #AD6800;
+  --pre-bg:   #EDEEF0; --pre-fg:  #5C6472;
+}
+
+body {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--txt-1);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+textarea, input, select, button { font-family: inherit; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.65s linear infinite; }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 28px 24px 72px; }
+
+/* Header */
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+.header-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: var(--txt-1); }
+.header-sub { font-size: 13.5px; color: var(--txt-3); font-weight: 500; margin-top: 5px; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Tab bar */
+.tab-bar { display: flex; gap: 8px; background: #EBEDF1; padding: 4px; border-radius: 11px; }
+.tab-btn {
+  border: none; border-radius: 8px; padding: 9px 22px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: transparent; color: var(--txt-3);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.tab-btn.active {
+  background: #fff; color: var(--txt-1); font-weight: 700;
+  box-shadow: 0 1px 3px rgba(16,24,40,0.12);
+}
+
+/* Card */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+}
+
+/* Section */
+.section { display: flex; border-bottom: 1px solid var(--divider); }
+.section:last-child { border-bottom: none; }
+.sec-label {
+  width: 170px; flex: none; border-right: 1px solid var(--divider); padding: 26px 22px;
+}
+.sec-label-inner { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #3B4250; }
+.sec-bar { width: 4px; height: 15px; background: var(--bar); border-radius: 2px; flex: none; }
+.sec-body { flex: 1; padding: 22px 24px; }
+
+/* Drop zone */
+.drop-zone {
+  display: flex; align-items: center; gap: 18px;
+  border: 1.5px dashed #D5DAE1; border-radius: 12px;
+  padding: 18px 22px; background: #FAFBFC;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drop-zone.drag-over { border-color: var(--accent); background: #FEF7F1; }
+.drop-icon {
+  width: 46px; height: 46px; flex: none; border-radius: 10px;
+  background: #EEF1F5; display: flex; align-items: center;
+  justify-content: center; color: #6B7480; font-size: 20px;
+}
+.drop-info { flex: 1; min-width: 0; }
+.drop-title { font-size: 15px; font-weight: 700; color: #2B3340; }
+.drop-sub { font-size: 12.5px; color: var(--txt-3); margin-top: 4px; }
+.attach-chip {
+  margin-top: 10px; display: inline-flex; align-items: center; gap: 8px;
+  background: #EEF1F5; border-radius: 8px; padding: 5px 10px;
+  font-size: 12.5px; color: #3B4250;
+}
+.attach-chip-x { cursor: pointer; color: var(--txt-3); font-weight: 700; }
+.attach-chip-x:hover { color: var(--txt-1); }
+.ocr-loading { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--accent); font-weight: 700; }
+.ocr-spinner { width: 13px; height: 13px; border: 2px solid rgba(231,113,30,0.3); border-top-color: var(--accent); border-radius: 50%; }
+
+.pick-file-btn {
+  flex: none; background: #3A4250; color: #fff; border: none;
+  border-radius: 9px; padding: 12px 22px; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.pick-file-btn:hover { background: #2D3340; }
+.pick-file-btn.ghost { background: #fff; color: #3A4250; border: 1px solid #D5DAE1; }
+.pick-file-btn.ghost:hover { background: #F3F4F6; }
+.pick-file-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.modal-lbl { display: block; font-size: 12.5px; font-weight: 700; color: var(--txt-2); margin-bottom: 6px; }
+.roster-inp { width: 72px; height: 32px; border: 1px solid var(--border); border-radius: 7px; padding: 0 8px; font-size: 13px; text-align: center; color: var(--txt-1); outline: none; font-variant-numeric: tabular-nums; }
+.roster-inp:focus { border-color: var(--accent); }
+.modal-ta { width: 100%; min-height: 180px; resize: vertical; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.6; color: var(--txt-1); outline: none; margin-bottom: 16px; }
+.modal-ta:focus { border-color: #A5ADB8; }
+.modal-ta::placeholder { color: #9CA3AF; }
+.modal-box.wide { width: 560px; }
+
+/* Info grid */
+.info-grid {
+  display: grid; grid-template-columns: 92px 1fr 84px 1.25fr 84px 1fr;
+  gap: 1px; background: var(--border); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.ic-label {
+  background: var(--lbl-bg); display: flex; align-items: center;
+  padding: 0 14px; font-size: 13px; font-weight: 600; color: #4B5563;
+}
+.ic-req { color: var(--bar); margin-left: 2px; }
+.ic-val { background: #fff; padding: 0 12px; }
+.ii {
+  width: 100%; height: 48px; border: none; outline: none;
+  background: transparent; font-size: 14px; color: var(--txt-1);
+}
+.ii::placeholder { color: #9CA3AF; }
+.ic-check { display: flex; align-items: center; }
+.chk { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: #374151; font-weight: 500; }
+.chk input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex: none; }
+.chk small { color: var(--txt-3); font-weight: 500; }
+
+/* Content */
+.title-inp {
+  width: 100%; height: 52px; border: 1px solid var(--border);
+  border-radius: 10px; padding: 0 16px; font-size: 15px; font-weight: 600;
+  color: var(--txt-1); outline: none; margin-bottom: 16px;
+  transition: border-color 0.15s;
+}
+.title-inp:focus { border-color: #A5ADB8; }
+.title-inp::placeholder { color: #9CA3AF; }
+.content-ta {
+  width: 100%; min-height: 280px; resize: vertical;
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; font-size: 14px; line-height: 1.75;
+  color: var(--txt-1); outline: none;
+  transition: border-color 0.15s;
+}
+.content-ta:focus { border-color: #A5ADB8; }
+.content-ta::placeholder { color: #9CA3AF; }
+
+/* AI band */
+.ai-band { background: #FBFBFC; }
+.ai-band-space { width: 170px; flex: none; border-right: 1px solid var(--divider); }
+.ai-band-body { flex: 1; padding: 20px 24px; display: flex; justify-content: center; }
+.ai-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 11px; padding: 14px 34px;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(231,113,30,0.32);
+  transition: background 0.15s, transform 0.1s;
+}
+.ai-btn:not(:disabled):hover { background: var(--accent-d); transform: translateY(-1px); }
+.ai-btn:not(:disabled):active { transform: translateY(0); }
+.ai-btn:disabled { opacity: 0.85; cursor: wait; }
+.ai-dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+.ai-spin { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; }
+
+/* Proposals */
+.p-hint { font-size: 12.5px; color: var(--txt-3); font-weight: 600; margin-bottom: 12px; }
+.p-list { display: flex; flex-direction: column; gap: 12px; }
+.p-card {
+  border: 1px solid var(--border); background: #fff;
+  border-radius: 12px; padding: 16px; cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.p-card.sel { border: 1.5px solid var(--accent); background: #FEF6F0; }
+.p-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.p-left { display: flex; align-items: center; gap: 10px; }
+.radio {
+  width: 18px; height: 18px; flex: none; border-radius: 50%;
+  border: 2px solid #CBD2DA; display: inline-block;
+}
+.radio.on {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+}
+.p-n { font-size: 13px; font-weight: 700; color: #2B3340; }
+.copy-btn {
+  background: #fff; border: 1px solid #D5DAE1; border-radius: 8px;
+  padding: 6px 13px; font-size: 12px; font-weight: 700; color: #5A6472; cursor: pointer;
+  transition: background 0.1s;
+}
+.copy-btn:hover { background: #F3F4F6; }
+.p-opinion { font-size: 13.5px; line-height: 1.72; color: #374151; white-space: pre-wrap; }
+.p-empty {
+  border: 1.5px dashed #E0E4EA; border-radius: 12px; padding: 38px 24px;
+  text-align: center; color: var(--txt-3); font-size: 14px; line-height: 1.65;
+}
+.p-empty strong { color: #6B7280; }
+
+.save-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.reset-btn { margin-right: auto; color: #B4232B; border-color: #E7C6C3; }
+.reset-btn:hover:not(:disabled) { background: #FCEEED; }
+.save-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 10px; padding: 13px 30px;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(231,113,30,0.3);
+  transition: background 0.15s;
+}
+.save-btn:hover { background: var(--accent-d); }
+.draft-btn {
+  background: #fff; color: #3B4250; border: 1px solid #D5DAE1;
+  border-radius: 10px; padding: 13px 26px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.draft-btn:hover:not(:disabled) { background: #F3F4F6; }
+.draft-btn:disabled { color: #1A7A42; border-color: #A8D5B5; background: #F0FAF4; cursor: default; }
+
+/* Drafts table */
+.dft-head, .dft-row { display: grid; grid-template-columns: 140px 1fr 120px 150px 180px; }
+.dft-head { background: var(--lbl-bg); border-bottom: 1px solid var(--divider); font-size: 12.5px; font-weight: 700; color: #6B7280; }
+.dft-head > div, .dft-row > div { padding: 14px 16px; }
+.dft-row { border-bottom: 1px solid #F1F3F6; font-size: 13px; color: #374151; align-items: center; transition: background 0.1s; }
+.dft-row:last-child { border-bottom: none; }
+.dft-row:hover { background: #FAFBFC; }
+.dft-row .del { opacity: 0; cursor: pointer; color: #C0392B; font-weight: 700; transition: opacity 0.15s; }
+.dft-row:hover .del { opacity: 1; }
+.dft-acts { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
+.load-btn { background: #fff; border: 1px solid #D5DAE1; border-radius: 8px; padding: 6px 14px; font-size: 12.5px; font-weight: 700; color: #3B4250; cursor: pointer; white-space: nowrap; }
+.load-btn:hover { background: #F3F4F6; }
+
+/* Status / dashboard */
+.stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.stat-card { background: #fff; border: 1px solid var(--border); border-radius: 13px; padding: 18px 20px; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+.stat-k { font-size: 12.5px; color: var(--txt-3); font-weight: 600; }
+.stat-v { font-size: 28px; font-weight: 800; color: var(--txt-1); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.stat-v small { font-size: 14px; color: var(--txt-3); font-weight: 600; margin-left: 3px; }
+.stat-card.good { background: var(--good-bg); border-color: #BFE6CE; }
+.stat-card.good .stat-v, .stat-card.good .stat-k { color: var(--good-fg); }
+.stat-card.warn { background: var(--bad-bg); border-color: #F1C9C6; }
+.stat-card.warn .stat-v, .stat-card.warn .stat-k { color: var(--bad-fg); }
+
+.stat-block { padding: 20px 22px; margin-bottom: 16px; }
+.stat-block h3 { font-size: 15px; font-weight: 800; color: #2B3340; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+.h3-sub { font-size: 12px; font-weight: 600; color: var(--txt-3); }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.stat-grid .stat-block { margin-bottom: 0; }
+.stat-empty { font-size: 13px; color: var(--txt-3); padding: 6px 0; }
+
+.bar-row { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 12px; padding: 6px 0; }
+.bar-label { font-size: 13px; color: #3B4250; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { background: #EEF1F5; border-radius: 6px; height: 22px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 6px; min-width: 2px; transition: width 0.3s; }
+.bar-val { font-size: 13px; font-weight: 700; color: #3B4250; text-align: right; font-variant-numeric: tabular-nums; }
+
+.matrix-wrap { overflow-x: auto; }
+.matrix { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.matrix th, .matrix td { border: 1px solid var(--divider); padding: 9px 12px; text-align: center; white-space: nowrap; }
+.matrix th { background: var(--lbl-bg); font-weight: 700; color: #6B7280; font-size: 12.5px; }
+.matrix th.name-col, .matrix td.name-col { text-align: left; font-weight: 600; color: #2B3340; background: #fff; position: sticky; left: 0; }
+.matrix .cell-ok { color: var(--good-fg); font-weight: 700; }
+.matrix .cell-miss { background: var(--bad-bg); color: var(--bad-fg); font-weight: 800; }
+.matrix .cell-total { font-weight: 800; color: #2B3340; background: #F7F8FB; }
+.matrix th.total-col { background: #EEF0F3; }
+
+.matrix-legend { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--txt-2); }
+.matrix-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-box { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.cell-ok-box { background: var(--good-bg); border: 1px solid #BFE6CE; }
+.cell-miss-box { background: var(--bad-bg); border: 1px solid #F1C9C6; }
+.lg-note { color: var(--txt-3); }
+
+/* Safety KPI dashboard */
+.status-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+.team-select { display: flex; align-items: center; gap: 10px; }
+.team-select label { font-size: 12.5px; font-weight: 700; color: var(--txt-2); }
+.team-select select { height: 40px; border: 1px solid var(--border); border-radius: 9px; padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--txt-1); background: #fff; cursor: pointer; min-width: 160px; }
+.kpi-row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: stretch; }
+.kpi-main { background: #FAFBFC; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.kpi-pct { font-size: 46px; font-weight: 800; line-height: 1; color: var(--txt-1); font-variant-numeric: tabular-nums; }
+.kpi-sub { font-size: 12.5px; color: var(--txt-3); font-weight: 600; margin-top: 6px; }
+.kpi-bar { position: relative; height: 12px; background: #EAECEF; border-radius: 6px; margin-top: 14px; }
+.kpi-bar-fill { height: 100%; border-radius: 6px; transition: width 0.3s; }
+.kpi-target { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 2px; background: #3A4250; }
+.kpi-verdict { margin-top: 12px; font-size: 14px; font-weight: 800; color: var(--txt-3); }
+.kpi-verdict.ok { color: var(--good-fg); }
+.kpi-verdict.miss { color: var(--bad-fg); }
+.kpi-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mini-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; justify-content: center; }
+.kpi-note { font-size: 12px; color: var(--txt-3); margin-top: 14px; }
+.matrix tr.row-sel td { background: #FEF6F0; }
+.matrix tr.row-sel td.name-col { background: #FEF0E6; }
+
+@media (max-width: 720px) {
+  .stat-cards { grid-template-columns: repeat(2, 1fr); }
+  .stat-grid { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: 1fr; }
+  .kpi-cards { grid-template-columns: 1fr; }
+}
+
+/* Confirmed */
+.cf-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--divider); }
+.cf-title { font-size: 16px; font-weight: 800; color: #2B3340; }
+.cf-count { font-size: 13px; font-weight: 600; color: var(--txt-3); margin-left: 6px; }
+.csv-btn {
+  background: #fff; color: #3B4250; border: 1px solid #D5DAE1;
+  border-radius: 9px; padding: 10px 18px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  transition: background 0.1s;
+}
+.csv-btn:hover { background: #F3F4F6; }
+
+.tbl-head, .tbl-row {
+  display: grid;
+  grid-template-columns: 96px 78px 1fr 86px 92px 1.25fr 168px;
+}
+.del-btn { border: 1px solid #E7C6C3; background: #FCEEED; color: #C0392B; border-radius: 7px; padding: 6px 13px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.1s; }
+.del-btn:hover { background: #F7DAD7; }
+.tbl-head {
+  background: var(--lbl-bg); border-bottom: 1px solid var(--divider);
+  font-size: 12.5px; font-weight: 700; color: #6B7280;
+}
+.tbl-head > div, .tbl-row > div { padding: 14px 16px; }
+.tbl-row {
+  border-bottom: 1px solid #F1F3F6;
+  font-size: 13px; color: #374151; align-items: center;
+  transition: background 0.1s;
+}
+.tbl-row:last-child { border-bottom: none; }
+.tbl-row:hover { background: #FAFBFC; }
+.tbl-row .del { opacity: 0; cursor: pointer; color: #C0392B; font-weight: 700; transition: opacity 0.15s; }
+.tbl-row:hover .del { opacity: 1; }
+.row-no { font-weight: 600; color: #2B3340; }
+.row-type { color: #6B7280; }
+.row-op { color: #6B7280; line-height: 1.5; display: flex; align-items: flex-start; gap: 8px; }
+.op-text { flex: 1; min-width: 0; }
+.op-copy { flex: none; background: #fff; border: 1px solid #D5DAE1; border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 700; color: #5A6472; cursor: pointer; }
+.op-copy:hover { background: #F3F4F6; }
+.bad-no { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 800; color: var(--bad-fg); white-space: nowrap; }
+.manual-sel { height: 26px; border: 1px solid #D5DAE1; border-radius: 6px; font-size: 12px; font-weight: 700; color: #2B3340; background: #fff; cursor: pointer; padding: 0 6px; }
+.manual-ta { width: 100%; min-height: 64px; resize: vertical; margin-top: 10px; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; font-size: 13px; line-height: 1.6; color: var(--txt-1); outline: none; }
+.manual-ta:focus { border-color: var(--accent); }
+.manual-ta::placeholder { color: #9CA3AF; }
+.row-time { color: var(--txt-3); font-size: 12.5px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
+.cf-empty { padding: 64px 24px; text-align: center; color: var(--txt-3); font-size: 14px; }
+.cf-empty strong { color: #6B7280; }
+
+/* Badge */
+.badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: 999px; }
+.bg-pre  { background: var(--pre-bg);  color: var(--pre-fg); }
+.bg-good { background: var(--good-bg); color: var(--good-fg); }
+.bg-bad  { background: var(--bad-bg);  color: var(--bad-fg); }
+.bg-warn { background: var(--warn-bg); color: var(--warn-fg); }
+
+/* Modal */
+.modal-ov {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-box {
+  background: #fff; border-radius: 16px; padding: 32px;
+  width: 440px; max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+}
+.modal-t { font-size: 18px; font-weight: 800; color: var(--txt-1); margin-bottom: 8px; }
+.modal-s { font-size: 13.5px; color: var(--txt-3); line-height: 1.6; margin-bottom: 20px; }
+.modal-inp {
+  width: 100%; height: 48px; border: 1px solid var(--border);
+  border-radius: 10px; padding: 0 16px; font-size: 14px;
+  color: var(--txt-1); outline: none; margin-bottom: 16px;
+  transition: border-color 0.15s;
+}
+.modal-inp:focus { border-color: #A5ADB8; }
+.modal-inp::placeholder { color: #9CA3AF; }
+.modal-acts { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-cancel {
+  background: #fff; color: #4B5563; border: 1px solid #D5DAE1;
+  border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.modal-save {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.modal-save:hover { background: var(--accent-d); }
+
+/* API key btn */
+.api-btn {
+  background: #fff; color: #4B5563; border: 1px solid #D5DAE1;
+  border-radius: 9px; padding: 9px 16px; font-size: 13px;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background 0.1s;
+}
+.api-btn:hover { background: #F3F4F6; }
+.api-btn.set { border-color: #A8D5B5; color: #1A7A42; background: #F0FAF4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation: none; }
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="header-title">제안 심사 보조</div>
+      <div class="header-sub">TOP 제안활동 · 부적합 심사 시스템</div>
+    </div>
+    <div class="header-actions">
+      <button id="api-btn" class="api-btn" onclick="openApiModal()">⚙ Gemini 키</button>
+      <div class="tab-bar">
+        <button id="tab-c" class="tab-btn active" onclick="setTab('compose')">새로작성</button>
+        <button id="tab-d" class="tab-btn" onclick="setTab('drafts')">임시저장</button>
+        <button id="tab-k" class="tab-btn" onclick="setTab('confirmed')">확정</button>
+        <button id="tab-s" class="tab-btn" onclick="setTab('status')">제안현황</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compose View -->
+  <div id="compose-view">
+    <div class="card">
+
+      <!-- 메일 첨부 -->
+      <div class="section">
+        <div class="sec-label">
+          <span class="sec-label-inner"><span class="sec-bar"></span>메일 첨부</span>
+        </div>
+        <div class="sec-body">
+          <div id="drop-zone" class="drop-zone">
+            <div class="drop-icon">✉</div>
+            <div class="drop-info">
+              <div class="drop-title">제안 메일·캡처 파일을 끌어다 놓거나 선택한 뒤 <b>불러오기</b>를 누르세요</div>
+              <div class="drop-sub">이미지(캡처)·.txt·.md·.msg는 Gemini가 정보 추출 · .json은 그대로 반영 · 모두 수동 수정 가능</div>
+              <div id="attach-status"></div>
+            </div>
+            <button class="pick-file-btn ghost" onclick="pickFile()">파일 선택</button>
+            <button id="import-btn" class="pick-file-btn" onclick="importAttached()" disabled>불러오기</button>
+            <input id="file-inp" type="file" accept=".msg,.eml,.txt,.md,.json,image/*" style="display:none" onchange="onFileChange(event)">
+          </div>
+        </div>
+      </div>
+
+      <!-- 제안 정보 -->
+      <div class="section">
+        <div class="sec-label">
+          <span class="sec-label-inner"><span class="sec-bar"></span>제안 정보</span>
+        </div>
+        <div class="sec-body">
+          <div class="info-grid">
+            <div class="ic-label">제안번호<span class="ic-req">*</span></div>
+            <div class="ic-val"><input id="inp-no"       class="ii" placeholder="예) 250142" oninput="st.jeanNo=this.value"></div>
+            <div class="ic-label">유형<span class="ic-req">*</span></div>
+            <div class="ic-val">
+              <select id="sel-type" class="ii" style="cursor:pointer" onchange="st.ptype=this.value">
+                <option>Idea제안</option>
+                <option>실시제안</option>
+                <option>테마제안</option>
+                <option>현장제안</option>
+                <option>Near Miss</option>
+              </select>
+            </div>
+            <div class="ic-label">제안자<span class="ic-req">*</span></div>
+            <div class="ic-val"><input id="inp-proposer" class="ii" placeholder="이름" oninput="st.proposer=this.value"></div>
+            <div class="ic-label">팀 / 부서</div>
+            <div class="ic-val"><input id="inp-dept"     class="ii" placeholder="소속" oninput="st.dept=this.value"></div>
+            <div class="ic-label">제안일자</div>
+            <div class="ic-val"><input id="inp-date"     class="ii" type="date" onchange="st.pdate=this.value"></div>
+            <div class="ic-label">안전 관련</div>
+            <div class="ic-val ic-check">
+              <label class="chk"><input id="inp-safety" type="checkbox" onchange="st.safety=this.checked"><span>안전·보건 관련 제안 <small>(Near Miss는 자동 포함)</small></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 제안 내용 -->
+      <div class="section">
+        <div class="sec-label">
+          <span class="sec-label-inner"><span class="sec-bar"></span>제안 내용</span>
+        </div>
+        <div class="sec-body">
+          <input id="inp-title"   class="title-inp" placeholder="제안 제목" oninput="st.title=this.value">
+          <textarea id="inp-content" class="content-ta" placeholder="개선 전 현황, 개선 아이디어, 기대 효과 순으로 작성하세요." oninput="st.content=this.value"></textarea>
+        </div>
+      </div>
+
+      <!-- AI 심사하기 -->
+      <div class="section ai-band">
+        <div class="ai-band-space"></div>
+        <div class="ai-band-body">
+          <button id="ai-btn" class="ai-btn" onclick="runAI()">
+            <span class="ai-dot"></span>AI 심사하기
+          </button>
+        </div>
+      </div>
+
+      <!-- 심사 결과 -->
+      <div class="section" style="border-bottom:none">
+        <div class="sec-label">
+          <span class="sec-label-inner"><span class="sec-bar"></span>심사 결과</span>
+        </div>
+        <div class="sec-body">
+          <div id="proposals-area"></div>
+          <div class="save-row">
+            <button class="draft-btn reset-btn" onclick="resetForm()">초기화</button>
+            <button id="draft-btn" class="draft-btn" onclick="saveDraft()">중간 저장</button>
+            <button class="save-btn" onclick="saveConfirmed()">확정 저장</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Drafts View -->
+  <div id="drafts-view" style="display:none">
+    <div class="card">
+      <div class="cf-head">
+        <div class="cf-title">임시저장 목록 <span id="dft-count" class="cf-count">0건</span></div>
+      </div>
+      <div id="dft-head" class="dft-head" style="display:none">
+        <div>제안번호</div><div>제목</div><div>유형</div><div>저장일시</div><div></div>
+      </div>
+      <div id="dft-rows"></div>
+      <div id="dft-empty" class="cf-empty">임시저장된 작성 건이 없습니다. 작성 중 <strong>중간 저장</strong>을 누르면 여기에 보관됩니다.</div>
+    </div>
+  </div>
+
+  <!-- Confirmed View -->
+  <div id="confirmed-view" style="display:none">
+    <div class="card">
+      <div class="cf-head">
+        <div class="cf-title">확정 목록 <span id="cf-count" class="cf-count">0건</span></div>
+        <button class="csv-btn" onclick="exportCSV()">CSV 내보내기</button>
+      </div>
+      <div id="tbl-head" class="tbl-head" style="display:none">
+        <div>제안번호</div><div>제안자</div><div>제목</div><div>유형</div><div>판정</div><div>심사평</div><div>확정일시</div>
+      </div>
+      <div id="tbl-rows"></div>
+      <div id="cf-empty" class="cf-empty">확정된 제안이 없습니다. 심사 후 <strong>확정 저장</strong>을 누르면 여기에 기록됩니다.</div>
+    </div>
+  </div>
+
+  <!-- Status View -->
+  <div id="status-view" style="display:none">
+
+    <!-- 팀 선택 + 안전제안 KPI 요약 -->
+    <div class="card stat-block">
+      <div class="status-top">
+        <h3 style="margin:0"><span class="sec-bar"></span>안전제안 KPI 현황</h3>
+        <div class="team-select">
+          <label for="month-sel">월</label>
+          <select id="month-sel" onchange="updateStatus()"></select>
+          <label for="team-sel">팀 / 부서</label>
+          <select id="team-sel" onchange="updateStatus()"></select>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-main">
+          <div class="kpi-pct" id="kpi-pct">0%</div>
+          <div class="kpi-sub"><span id="kpi-scope">전체</span> · 목표 50%</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-fill"></div><div class="kpi-target" title="목표 50%"></div></div>
+          <div class="kpi-verdict" id="kpi-verdict"></div>
+        </div>
+        <div class="kpi-cards">
+          <div class="mini-card"><div class="stat-k">대상 인원</div><div class="stat-v"><span id="kpi-members">0</span><small>명</small></div></div>
+          <div class="mini-card"><div class="stat-k">안전제안 제출 인원</div><div class="stat-v"><span id="kpi-safe-members">0</span><small>명</small></div></div>
+          <div class="mini-card"><div class="stat-k">안전관련 제안</div><div class="stat-v"><span id="kpi-safe-count">0</span><small>건</small></div></div>
+        </div>
+      </div>
+      <div class="kpi-note">안전관련 제안 = <b>안전 여부 체크</b> 또는 <b>Near Miss</b> 유형 · 달성률 = (안전제안 제출 인원 ÷ 대상 인원) · <b>부적합 제안은 실적에서 제외</b></div>
+    </div>
+
+    <!-- 팀별 KPI 달성 현황 -->
+    <div class="card stat-block">
+      <h3><span class="sec-bar"></span>팀별 안전제안 달성 현황 <span class="h3-sub">대상 인원의 50% 이상이 안전제안 제출 시 달성 · 대상 인원 직접 입력</span></h3>
+      <div class="matrix-wrap"><table class="matrix" id="team-kpi-table"></table></div>
+      <div class="kpi-note">「대상 인원」칸에 부서별 실제 인원을 입력하면 저장됩니다. 비워두면 제안 등록 인원 수로 계산합니다.</div>
+    </div>
+
+    <!-- 인원별 상세 -->
+    <div class="card stat-block">
+      <h3><span class="sec-bar"></span>인원별 상세 <span class="h3-sub" id="member-scope"></span></h3>
+      <div class="matrix-wrap"><table class="matrix" id="member-table"></table></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- API Key Modal -->
+<div id="api-modal" class="modal-ov" style="display:none" onclick="if(event.target===this)closeApiModal()">
+  <div class="modal-box">
+    <div class="modal-t">Gemini 설정</div>
+    <div class="modal-s">AI 기능에 사용할 Gemini API 키를 입력하세요(브라우저에만 저장). 키 발급: aistudio.google.com/apikey · <b>할당량(quota) 초과</b> 오류가 나면 아래에서 다른 모델을 선택해 보세요.</div>
+    <label class="modal-lbl">API 키</label>
+    <input id="api-key-inp" class="modal-inp" type="password" placeholder="AIza…" onkeydown="if(event.key==='Enter')saveApiKey()">
+    <label class="modal-lbl">모델 (무료 할당량 모델 권장)</label>
+    <select id="model-sel" class="modal-inp">
+      <option value="gemini-2.5-flash">gemini-2.5-flash (권장)</option>
+      <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+    </select>
+    <div class="modal-acts">
+      <button class="modal-cancel" onclick="closeApiModal()">취소</button>
+      <button class="modal-save"   onclick="saveApiKey()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ── Firebase ───────────────────────────────────────────────────
+// Firestore SDK는 동적 import로 불러옵니다. 네트워크 문제로 SDK 로드에
+// 실패하더라도 화면(탭·AI 심사·이미지 인식·CSV)은 그대로 동작합니다.
+const firebaseConfig = {
+  apiKey: "AIzaSyDQ-QwM_jQaOSvWyJ0gLlh2h9hVEjDCE0A",
+  authDomain: "dashboard-31cf4.firebaseapp.com",
+  projectId: "dashboard-31cf4",
+  storageBucket: "dashboard-31cf4.firebasestorage.app",
+  messagingSenderId: "768702603800",
+  appId: "1:768702603800:web:a3de079969c7203662d96d",
+};
+const FB_VER = "12.15.0";
+let db = null, CONFIRMED = null, DRAFTS = null, ROSTERS = null, fs = null;
+
+// ── Gemini (무료 모델) ─────────────────────────────────────────
+// ⚠️ 공개 사이트에 임베드된 키는 누구나 추출·사용할 수 있습니다.
+// Google AI Studio에서 키 사용 제한을 걸고, 노출된 키는 주기적으로 재발급하세요.
+// 보안상 키는 코드에 넣지 않습니다(공개 저장소/사이트 노출 방지).
+// 사용자가 ⚙ Gemini 키 버튼에서 1회 입력 → 브라우저(localStorage)에만 저장됩니다.
+const GEMINI_KEY_DEFAULT = "";
+const GEMINI_MODEL_DEFAULT = "gemini-2.5-flash";   // 무료 할당량이 있는 모델
+// 제안 정보 추출용 공통 프롬프트 조각
+const EXTRACT_JSON = '{"제안번호":"","유형":"","제안자":"","부서":"","제안일자":"YYYY-MM-DD","제목":"","본문":"","안전여부":false}';
+const EXTRACT_INSTR = "값이 없으면 빈 문자열로 두고, 유형은 'Idea제안','실시제안','테마제안','현장제안','Near Miss' 중 가장 가까운 것으로 고르세요. 안전·보건·재해예방과 관련된 내용이면 안전여부를 true로 하세요. 본문은 줄바꿈을 포함해 핵심 내용을 옮기세요. 아래 JSON 형식으로만 출력하세요.\n";
+
+// TOP 제안활동 공식 부적합 판정 기준 (공지 기준)
+const REJECT_CRITERIA = `[부적합 판정 기준] — 아래 중 하나라도 명확히 해당하면 '부적합'입니다.
+기준1 (시리즈 제안): 동일한 개선(개선 배경·방법이 같음)을 설비 호기·라인·화면 번호 등만 바꿔 여러 건으로 분할 등록(수일~수개월 시차 등록 포함), 또는 동일 건을 제안분류만 달리하거나 Near Miss/Idea로 중복 등록 → 1건만 인정, 나머지 부적합.
+기준2 (Idea/실시 중복): 즉시 실시 가능하거나 이미 실시 완료된 건을 Idea제안과 실시제안(또는 현장제안)으로 연이어 등록 → 실시제안(현장제안) 1건만 인정, Idea 등 나머지 부적합.
+기준3 (정상화 제안): 표찰 교체, 일상 정리·정돈, 노후·부식·Leak·고장·수명도래에 따른 교체/수리/보강/Cleaning/점검, 주기적·반복 일상작업, T/A 기간 정비 등 '본래 기능 회복(정상화)'은 개선이 아니므로 부적합. 단, Near Miss 제안과 신규 설치·재질/Spec 변경 등 실제 '개선'은 제외(적합 가능).
+기준4 (현장 자율안전관리 Idea): CTO/SOP/비상훈련 등 현장 자율안전관리 활동은 검토 결과물에 대한 실시제안만 인정, Idea 제안은 부적합.`;
+
+async function initFirebase() {
+  try {
+    const [{ initializeApp }, firestore] = await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore.js`),
+    ]);
+    fs = firestore;
+    db = fs.getFirestore(initializeApp(firebaseConfig));
+    CONFIRMED = fs.collection(db, 'confirmed');
+    DRAFTS = fs.collection(db, 'drafts');
+    ROSTERS = fs.collection(db, 'rosters');
+    subscribeConfirmed();
+    subscribeDrafts();
+    subscribeRosters();
+  } catch (err) {
+    console.error('Firebase 초기화 실패:', err);
+    g('cf-empty').textContent = 'Firebase에 연결하지 못했습니다: ' + err.message;
+    g('dft-empty').textContent = 'Firebase에 연결하지 못했습니다: ' + err.message;
+  }
+}
+
+// ── State ──────────────────────────────────────────────────────
+const st = {
+  tab: 'compose',
+  jeanNo: '', ptype: 'Idea제안', proposer: '', dept: '',
+  pdate: new Date().toISOString().slice(0, 10),
+  title: '', content: '', safety: false,
+  attachName: '',
+  ocrLoading: false, aiLoading: false,
+  proposals: [], selectedIdx: -1, copiedIdx: -1,
+  manual: { judgment: '적합', opinion: '' },   // 3번째 직접 입력 안
+  confirmed: [],
+  drafts: [], editingDraftId: null,
+  geminiKey: localStorage.getItem('jesim_gemini_key') || '',
+  geminiModel: localStorage.getItem('jesim_gemini_model') || GEMINI_MODEL_DEFAULT,
+  attachFile: null,
+  rosters: {},
+};
+
+// ── Init ──────────────────────────────────────────────────────
+function init() {
+  g('inp-no').value       = st.jeanNo;
+  g('inp-proposer').value = st.proposer;
+  g('inp-dept').value     = st.dept;
+  g('inp-date').value     = st.pdate;
+  g('inp-title').value    = st.title;
+  g('inp-content').value  = st.content;
+  g('inp-safety').checked = st.safety;
+
+  const zone = g('drop-zone');
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  updateAttachStatus();
+  updateProposals();
+  updateConfirmedList();
+  updateDraftsList();
+  updateApiBtn();
+  initFirebase();
+}
+
+// ── Firestore sync ────────────────────────────────────────────
+function subscribeConfirmed() {
+  const qy = fs.query(CONFIRMED, fs.orderBy('ts', 'desc'));
+  fs.onSnapshot(qy, snap => {
+    st.confirmed = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateConfirmedList();
+  }, err => {
+    console.error('Firestore 구독 오류:', err);
+    g('cf-empty').textContent = '확정 목록을 불러오지 못했습니다: ' + err.message;
+  });
+}
+
+function subscribeDrafts() {
+  const qy = fs.query(DRAFTS, fs.orderBy('ts', 'desc'));
+  fs.onSnapshot(qy, snap => {
+    st.drafts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateDraftsList();
+  }, err => {
+    console.error('Firestore 구독 오류(drafts):', err);
+    g('dft-empty').textContent = '임시저장 목록을 불러오지 못했습니다: ' + err.message;
+  });
+}
+
+function subscribeRosters() {
+  fs.onSnapshot(ROSTERS, snap => {
+    const r = {};
+    snap.docs.forEach(d => { const c = d.data().count; if (c > 0) r[d.id] = c; });
+    st.rosters = r;
+    updateStatus();
+  }, err => console.error('Firestore 구독 오류(rosters):', err));
+}
+
+// 부서별 대상 인원 저장 (빈 값/0 이면 삭제 → 자동 계산으로 복귀)
+async function setRoster(team, value) {
+  if (!ROSTERS || !team || team === '(미상)') return;
+  const n = parseInt(value, 10);
+  try {
+    if (!n || n <= 0) await fs.deleteDoc(fs.doc(db, 'rosters', team));
+    else await fs.setDoc(fs.doc(db, 'rosters', team), { count: n, ts: Date.now() });
+  } catch(err) {
+    alert('대상 인원 저장에 실패했습니다:\n' + err.message);
+  }
+}
+
+// ── Tab ──────────────────────────────────────────────────────
+function setTab(tab) {
+  st.tab = tab;
+  g('compose-view').style.display   = tab === 'compose'   ? '' : 'none';
+  g('drafts-view').style.display    = tab === 'drafts'    ? '' : 'none';
+  g('confirmed-view').style.display = tab === 'confirmed' ? '' : 'none';
+  g('status-view').style.display    = tab === 'status'    ? '' : 'none';
+  g('tab-c').classList.toggle('active', tab === 'compose');
+  g('tab-d').classList.toggle('active', tab === 'drafts');
+  g('tab-k').classList.toggle('active', tab === 'confirmed');
+  g('tab-s').classList.toggle('active', tab === 'status');
+  if (tab === 'status') updateStatus();
+}
+
+// ── File handling ─────────────────────────────────────────────
+function pickFile() { g('file-inp').click(); }
+function onFileChange(e) { const f = e.target.files && e.target.files[0]; if (f) handleFile(f); }
+
+// 드래그/선택 시에는 첨부만 하고, [불러오기] 클릭 시 정보를 추출합니다.
+function handleFile(file) {
+  st.attachName = file.name;
+  st.attachFile = file;
+  const ib = g('import-btn'); if (ib) ib.disabled = false;
+  updateAttachStatus();
+}
+
+// 첨부된 파일에서 정보 불러오기
+function importAttached() {
+  const f = st.attachFile;
+  if (!f) { alert('먼저 파일을 끌어다 놓거나 선택해 주세요.'); return; }
+  const lower = f.name.toLowerCase();
+  if (f.type && f.type.startsWith('image/')) {
+    extractImage(f);                                 // 캡처/이미지 → Gemini 인식
+  } else if (/\.json$/.test(lower)) {
+    loadJson(f);                                     // JSON → 그대로 매핑(AI 불필요)
+  } else if (/\.msg$/.test(lower)) {
+    readMsgText(f).then(t => extractFromText(t, f.name));   // Outlook .msg(바이너리) → 텍스트 추출 후 Gemini
+  } else {
+    readTextFile(f).then(t => extractFromText(t, f.name));  // 텍스트/메일 → Gemini 추출
+  }
+}
+
+function readTextFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.readAsText(file);
+  });
+}
+
+// Outlook .msg는 바이너리(OLE/CFBF) 포맷이라 그냥 읽으면 깨집니다.
+// 1순위: 전용 파서(msgreader, CDN)로 제목·본문·발신자 정확 추출
+// 2순위(폴백): UTF-16LE 디코딩 후 읽을 수 있는 텍스트 구간만 추출
+async function readMsgText(file) {
+  const buf = await file.arrayBuffer();
+  let libText = '';
+  try {
+    const mod = await import('https://cdn.jsdelivr.net/npm/@kenjiuno/msgreader/+esm');
+    const MsgReader = mod.default || mod.MsgReader || mod;
+    const d = new MsgReader(buf).getFileData();
+    if (d && !d.error) {
+      const p = [];
+      if (d.subject) p.push('제목: ' + d.subject);
+      const sender = [d.senderName, d.senderEmail].filter(Boolean).join(' ');
+      if (sender) p.push('보낸사람: ' + sender);
+      if (d.clientSubmitTime || d.messageDeliveryTime) p.push('일시: ' + (d.clientSubmitTime || d.messageDeliveryTime));
+      if (d.body) p.push('본문:\n' + d.body);
+      libText = p.join('\n').trim();
+    }
+  } catch (e) {
+    console.warn('[msg] 전용 파서 로드/파싱 실패 → 폴백 사용:', e);
+  }
+  if (libText.replace(/\s/g, '').length >= 10) return libText.slice(0, 20000);
+
+  // 폴백: UTF-16LE 휴리스틱 추출
+  const bytes = new Uint8Array(buf);
+  const allowed = /[가-힣㄰-㆏一-鿿0-9A-Za-z \t\r\n.,:;!?@#%&*()_\-+='"\/\[\]{}<>~·•…|]/;
+  const grab = (enc) => {
+    let s = '';
+    try { s = new TextDecoder(enc, { fatal: false }).decode(bytes); } catch (e) { return []; }
+    const runs = []; let cur = '';
+    for (const ch of s) {
+      if (allowed.test(ch)) cur += ch;
+      else { if (cur.trim().length >= 4) runs.push(cur.trim()); cur = ''; }
+    }
+    if (cur.trim().length >= 4) runs.push(cur.trim());
+    return runs;
+  };
+  let runs = grab('utf-16le');
+  if (runs.join('').replace(/\s/g, '').length < 40) runs = runs.concat(grab('utf-8'));
+  const seen = new Set(), out = [];
+  for (const r of runs) {
+    const k = r.replace(/\s+/g, ' ').trim();
+    if (k.length >= 4 && !seen.has(k)) { seen.add(k); out.push(k); }
+  }
+  const fb = (libText ? libText + '\n' : '') + out.join('\n');
+  return fb.slice(0, 20000);
+}
+
+function loadJson(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try { applyFields(JSON.parse(String(reader.result || ''))); }
+    catch (e) { alert('JSON 파일을 해석하지 못했습니다:\n' + e.message); }
+  };
+  reader.readAsText(file);
+}
+
+// OCR 결과·JSON 공통 필드 매핑
+function applyFields(d) {
+  if (d['제안번호']) { st.jeanNo   = d['제안번호']; setF('inp-no',       st.jeanNo); }
+  if (d['유형'])    { st.ptype    = d['유형'];     setSel('sel-type',   st.ptype); }
+  if (d['제안자'])  { st.proposer = d['제안자'];   setF('inp-proposer', st.proposer); }
+  if (d['부서'])    { st.dept     = d['부서'];     setF('inp-dept',     st.dept); }
+  if (d['제안일자']) { st.pdate   = d['제안일자']; setF('inp-date',     st.pdate); }
+  if (d['제목'])    { st.title    = d['제목'];     setF('inp-title',    st.title); }
+  if (d['본문'])    { st.content  = d['본문'];     setF('inp-content',  st.content); }
+  if ('안전여부' in d) {
+    const v = d['안전여부'];
+    st.safety = v === true || v === 'true' || v === 'Y' || v === '예' || v === 1;
+    const c = g('inp-safety'); if (c) c.checked = st.safety;
+  }
+}
+
+function clearAttach() {
+  st.attachName = '';
+  st.attachFile = null;
+  g('file-inp').value = '';
+  const ib = g('import-btn'); if (ib) ib.disabled = true;
+  updateAttachStatus();
+}
+
+function updateAttachStatus() {
+  const el = g('attach-status');
+  if (!el) return;
+  if (st.ocrLoading) {
+    el.innerHTML = `<div class="ocr-loading"><span class="ocr-spinner spin"></span>Gemini가 내용 분석 중…</div>`;
+  } else if (st.attachName) {
+    el.innerHTML = `<div class="attach-chip">📎 ${esc(st.attachName)} <span class="attach-chip-x" onclick="clearAttach()">✕</span></div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// ── 정보 추출 (Gemini) ────────────────────────────────────────
+function hasKey() { return !!(st.geminiKey || GEMINI_KEY_DEFAULT); }
+function requireKey() {
+  if (hasKey()) return true;
+  alert('AI 기능(정보 추출·심사)을 사용하려면 Gemini API 키가 필요합니다.\n우측 상단 ⚙ Gemini 키 버튼에서 키를 입력해 주세요.\n키 발급: aistudio.google.com/apikey');
+  openApiModal();
+  return false;
+}
+
+// 캡처/이미지 파일에서 제안 정보 추출
+async function extractImage(file) {
+  if (!requireKey()) return;
+  st.ocrLoading = true;
+  updateAttachStatus();
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const b64  = String(reader.result).split(',')[1];
+    const mime = file.type || 'image/png';
+    const prompt = `이 이미지는 제안서 또는 제안 메일 화면(캡처)입니다. 내용을 읽고 정보를 추출하세요. ${EXTRACT_INSTR}${EXTRACT_JSON}`;
+    try {
+      const text = await callGemini([
+        { inline_data: { mime_type: mime, data: b64 } },
+        { text: prompt },
+      ], { json: true });
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) applyFields(JSON.parse(m[0]));
+      else alert('이미지에서 정보를 해석하지 못했습니다. 수동으로 입력해 주세요.');
+    } catch(err) {
+      alert('이미지 분석에 실패했습니다:\n' + err.message);
+    }
+    st.ocrLoading = false;
+    updateAttachStatus();
+  };
+  reader.readAsDataURL(file);
+}
+
+// 메시지/텍스트에서 제안 정보 추출
+async function extractFromText(text, label) {
+  if (!text.trim()) { alert('분석할 내용이 없습니다.'); return; }
+  if (!requireKey()) return;
+  st.attachName = label || st.attachName;
+  st.ocrLoading = true;
+  updateAttachStatus();
+  const prompt = `다음은 제안 메일 또는 메시지에서 추출한 내용입니다(파일에서 추출해 잡음이 섞여 있을 수 있으니 제안과 무관한 부분은 무시하세요). 내용을 읽고 정보를 추출하세요. ${EXTRACT_INSTR}${EXTRACT_JSON}\n\n[원문]\n${text}`;
+  try {
+    const out = await callGemini([{ text: prompt }], { json: true });
+    const m = out.match(/\{[\s\S]*\}/);
+    if (m) applyFields(JSON.parse(m[0]));
+    else alert('메시지에서 정보를 해석하지 못했습니다. 수동으로 입력해 주세요.');
+  } catch(err) {
+    alert('메시지 분석에 실패했습니다:\n' + err.message);
+  }
+  st.ocrLoading = false;
+  updateAttachStatus();
+}
+
+function setF(id, v) { const el = g(id); if (el) el.value = v; }
+function setSel(id, v) {
+  const el = g(id);
+  if (!el) return;
+  for (const o of el.options) { if (o.value === v || o.text === v) { el.value = o.value; break; } }
+}
+
+// 현재 입력 폼 → 상태 동기화
+function syncFormToState() {
+  st.jeanNo   = g('inp-no').value.trim();
+  st.ptype    = g('sel-type').value;
+  st.proposer = g('inp-proposer').value;
+  st.dept     = g('inp-dept').value;
+  st.pdate    = g('inp-date').value;
+  st.title    = g('inp-title').value.trim();
+  st.content  = g('inp-content').value;
+  st.safety   = g('inp-safety').checked;
+}
+
+// ── AI Review ─────────────────────────────────────────────────
+async function runAI() {
+  syncFormToState();
+  if (!st.content.trim()) { alert('제안 내용을 먼저 입력하거나 첨부해 주세요.'); return; }
+  if (!requireKey()) return;
+
+  const btn = g('ai-btn');
+  st.aiLoading = true;
+  btn.disabled = true;
+  btn.style.background = '#C45E18';
+  btn.innerHTML = `<span class="ai-spin spin"></span>AI 심사 중…`;
+
+  const prompt = `당신은 TOP 제안활동 부적합 심사위원입니다. 아래 [부적합 판정 기준]을 최우선으로 적용해 제안을 심사하고, 서로 다른 관점의 심사안 2가지를 제시하세요.
+
+${REJECT_CRITERIA}
+
+[제안 제목] ${st.title || '(미입력)'}
+[유형] ${st.ptype}
+[제안 내용]
+${st.content}
+
+판정은 '적합' 또는 '부적합' 둘 중 하나만 사용하세요. 위 기준 중 하나라도 명확히 해당하면 '부적합', 그렇지 않은 실제 개선이면 '적합'으로 판정하세요.
+심사평은 1문장(불가피하면 최대 2문장)으로 매우 짧게 작성합니다. 부적합일 때는 심사평 맨 앞에 해당 기준을 "[기준N·이름]" 형식으로 표기하세요(예: "[기준3·정상화] 노후 보강은 원상복구로 개선이 아님").
+다른 말 없이 아래 JSON 배열만 출력하세요.
+[{"판정":"","심사평":""},{"판정":"","심사평":""}]`;
+
+  try {
+    const text = await callGemini([{ text: prompt }], { json: true, maxTokens: 2048 });
+    const m = text.match(/\[[\s\S]*\]/);
+    if (m) {
+      const arr = JSON.parse(m[0]);
+      st.proposals = arr.slice(0, 2).map(o => ({
+        judgment: o['판정'] === '부적합' ? '부적합' : '적합',
+        opinion:  String(o['심사평'] || '').trim(),
+      }));
+      st.selectedIdx = -1;
+    } else {
+      alert('AI 응답을 해석하지 못했습니다. 다시 시도해 주세요.');
+    }
+  } catch(err) {
+    alert('AI 심사 호출에 실패했습니다:\n' + err.message);
+  }
+
+  st.aiLoading = false;
+  btn.disabled = false;
+  btn.style.background = '';
+  btn.innerHTML = `<span class="ai-dot"></span>AI 심사하기`;
+  updateProposals();
+}
+
+// 새로작성 폼 초기화
+function resetForm() {
+  if (!confirm('작성 중인 내용을 모두 지우고 새로 시작할까요?')) return;
+  st.jeanNo = ''; st.ptype = 'Idea제안'; st.proposer = ''; st.dept = '';
+  st.pdate = new Date().toISOString().slice(0, 10);
+  st.title = ''; st.content = ''; st.safety = false;
+  st.proposals = []; st.selectedIdx = -1; st.copiedIdx = -1; st.editingDraftId = null;
+  st.manual = { judgment: '적합', opinion: '' };
+  st.attachName = ''; st.attachFile = null;
+  setF('inp-no', ''); setSel('sel-type', 'Idea제안'); setF('inp-proposer', ''); setF('inp-dept', '');
+  setF('inp-date', st.pdate); setF('inp-title', ''); setF('inp-content', '');
+  g('inp-safety').checked = false;
+  g('file-inp').value = '';
+  const ib = g('import-btn'); if (ib) ib.disabled = true;
+  updateAttachStatus();
+  updateProposals();
+  setTab('compose');
+}
+
+// ── Proposals (AI 2안 + 직접 입력 1안) ───────────────────────
+function getProposal(i) { return i === 2 ? st.manual : st.proposals[i]; }
+
+// 선택 표시만 가볍게 갱신(전체 재렌더 X → 직접 입력 textarea 포커스 유지)
+function markSelected(idx) {
+  st.selectedIdx = idx;
+  document.querySelectorAll('#proposals-area .p-card').forEach((el) => {
+    const on = el.dataset.idx === String(idx);
+    el.classList.toggle('sel', on);
+    const radio = el.querySelector('.radio');
+    if (radio) { radio.className = 'radio' + (on ? ' on' : ''); radio.textContent = on ? '✓' : ''; }
+  });
+}
+function selectProposal(i) { markSelected(i); }
+function onManualJudgment(v) { st.manual.judgment = v; markSelected(2); }
+function onManualInput(v) { st.manual.opinion = v; if (st.selectedIdx !== 2) markSelected(2); }
+
+function copyProposal(i, btn) {
+  const p = getProposal(i); if (!p) return;
+  copyText(`판정: ${p.judgment}\n심사평: ${p.opinion}`, btn);
+}
+function copyOpinion(btn) {
+  const cell = btn.closest('.row-op');
+  const span = cell && cell.querySelector('.op-text');
+  copyText(span ? span.textContent : '', btn);
+}
+
+function updateProposals() {
+  const el = g('proposals-area'); if (!el) return;
+  const aiCards = st.proposals.map((p, i) => {
+    const sel = st.selectedIdx === i;
+    return `<div class="p-card${sel ? ' sel' : ''}" data-idx="${i}" onclick="selectProposal(${i})">
+      <div class="p-head">
+        <div class="p-left">
+          <span class="radio${sel ? ' on' : ''}">${sel ? '✓' : ''}</span>
+          <span class="p-n">심사안 ${i + 1}</span>${badgeHtml(p.judgment)}
+        </div>
+        <button class="copy-btn" onclick="event.stopPropagation();copyProposal(${i},this)">복사</button>
+      </div>
+      <div class="p-opinion">${esc(p.opinion)}</div>
+    </div>`;
+  }).join('');
+  const ms = st.selectedIdx === 2;
+  const manualCard = `<div class="p-card${ms ? ' sel' : ''}" data-idx="2" onclick="selectProposal(2)">
+    <div class="p-head">
+      <div class="p-left">
+        <span class="radio${ms ? ' on' : ''}">${ms ? '✓' : ''}</span>
+        <span class="p-n">직접 입력</span>
+        <select class="manual-sel" onclick="event.stopPropagation()" onchange="onManualJudgment(this.value)">
+          <option value="적합"${st.manual.judgment === '적합' ? ' selected' : ''}>적합</option>
+          <option value="부적합"${st.manual.judgment === '부적합' ? ' selected' : ''}>부적합</option>
+        </select>
+      </div>
+      <button class="copy-btn" onclick="event.stopPropagation();copyProposal(2,this)">복사</button>
+    </div>
+    <textarea class="manual-ta" placeholder="심사평을 직접 입력하세요" onclick="event.stopPropagation()" oninput="onManualInput(this.value)">${esc(st.manual.opinion)}</textarea>
+  </div>`;
+  const hint = st.proposals.length
+    ? 'AI가 제안한 2가지 또는 직접 입력 중 하나를 선택하세요.'
+    : '위 <strong>AI 심사하기</strong>로 2가지 심사안을 받거나, 아래 <strong>직접 입력</strong>에 작성하세요.';
+  el.innerHTML = `<div class="p-hint">${hint}</div><div class="p-list">${aiCards}${manualCard}</div>`;
+}
+
+// ── Save ──────────────────────────────────────────────────────
+async function saveConfirmed() {
+  syncFormToState();
+  if (!st.jeanNo || !st.title) { alert('제안번호와 제목은 필수입니다.'); return; }
+  if (st.selectedIdx < 0) { alert('심사안을 선택한 뒤 확정해 주세요.'); return; }
+  const p = getProposal(st.selectedIdx);
+  if (!p) { alert('심사안을 선택한 뒤 확정해 주세요.'); return; }
+  if (st.selectedIdx === 2 && !p.opinion.trim()) { alert('직접 입력 심사평을 작성해 주세요.'); return; }
+  if (!CONFIRMED) { alert('Firebase에 아직 연결되지 않았습니다. 잠시 후 다시 시도해 주세요.'); return; }
+  const entry = {
+    no: st.jeanNo, title: st.title, type: st.ptype,
+    proposer: st.proposer, dept: st.dept, pdate: st.pdate, safety: st.safety,
+    judgment: p.judgment, opinion: p.opinion,
+    time: fmtTs(Date.now()), ts: Date.now(),
+  };
+  try {
+    await fs.addDoc(CONFIRMED, entry);   // onSnapshot이 목록을 자동 갱신
+    // 임시저장본을 확정했다면 해당 임시저장은 정리
+    if (st.editingDraftId) {
+      try { await fs.deleteDoc(fs.doc(db, 'drafts', st.editingDraftId)); } catch(e) {}
+      st.editingDraftId = null;
+    }
+    if (p.judgment === '부적합') {
+      const n = st.confirmed.filter(r => r.judgment === '부적합').length + 1;
+      alert(`부적합으로 확정되었습니다. → 부적합제안 #${n}`);
+    }
+    setTab('confirmed');
+  } catch(err) {
+    alert('확정 저장에 실패했습니다:\n' + err.message);
+  }
+}
+
+async function removeRow(id) {
+  if (!db) return;
+  try {
+    await fs.deleteDoc(fs.doc(db, 'confirmed', id));   // onSnapshot이 목록을 자동 갱신
+  } catch(err) {
+    alert('삭제에 실패했습니다:\n' + err.message);
+  }
+}
+
+// ── 중간 저장 (Drafts) ────────────────────────────────────────
+async function saveDraft() {
+  syncFormToState();
+  if (!st.jeanNo && !st.title && !st.content.trim()) {
+    alert('저장할 내용이 없습니다. 제안번호·제목·내용 중 하나는 입력해 주세요.');
+    return;
+  }
+  if (!DRAFTS) { alert('Firebase에 아직 연결되지 않았습니다. 잠시 후 다시 시도해 주세요.'); return; }
+  const draft = {
+    no: st.jeanNo, type: st.ptype, proposer: st.proposer, dept: st.dept,
+    pdate: st.pdate, title: st.title, content: st.content, safety: st.safety,
+    proposals: st.proposals, selectedIdx: st.selectedIdx, ts: Date.now(),
+  };
+  try {
+    if (st.editingDraftId) {
+      await fs.setDoc(fs.doc(db, 'drafts', st.editingDraftId), draft);
+    } else {
+      const ref = await fs.addDoc(DRAFTS, draft);
+      st.editingDraftId = ref.id;
+    }
+    flashDraftSaved();
+  } catch(err) {
+    alert('중간 저장에 실패했습니다:\n' + err.message);
+  }
+}
+
+function flashDraftSaved() {
+  const b = g('draft-btn'); if (!b) return;
+  b.textContent = '저장됨 ✓'; b.disabled = true;
+  setTimeout(() => { b.textContent = '중간 저장'; b.disabled = false; }, 1400);
+}
+
+function loadDraft(id) {
+  const d = st.drafts.find(x => x.id === id);
+  if (!d) return;
+  st.jeanNo = d.no || ''; st.ptype = d.type || 'Idea제안';
+  st.proposer = d.proposer || ''; st.dept = d.dept || '';
+  st.pdate = d.pdate || st.pdate; st.title = d.title || ''; st.content = d.content || '';
+  st.safety = !!d.safety;
+  st.proposals = Array.isArray(d.proposals) ? d.proposals : [];
+  st.selectedIdx = typeof d.selectedIdx === 'number' ? d.selectedIdx : -1;
+  st.editingDraftId = id;
+  setF('inp-no', st.jeanNo); setSel('sel-type', st.ptype);
+  setF('inp-proposer', st.proposer); setF('inp-dept', st.dept);
+  setF('inp-date', st.pdate); setF('inp-title', st.title); setF('inp-content', st.content);
+  g('inp-safety').checked = st.safety;
+  updateProposals();
+  setTab('compose');
+}
+
+async function removeDraft(id) {
+  if (!db) return;
+  try {
+    await fs.deleteDoc(fs.doc(db, 'drafts', id));   // onSnapshot이 목록을 자동 갱신
+    if (st.editingDraftId === id) st.editingDraftId = null;
+  } catch(err) {
+    alert('삭제에 실패했습니다:\n' + err.message);
+  }
+}
+
+function updateDraftsList() {
+  const has = st.drafts.length > 0;
+  g('dft-count').textContent = st.drafts.length + '건';
+  g('dft-head').style.display = has ? 'grid' : 'none';
+  g('dft-empty').style.display = has ? 'none' : '';
+  g('dft-rows').innerHTML = st.drafts.map(d => `
+    <div class="dft-row">
+      <div class="row-no">${esc(d.no || '(번호 미입력)')}</div>
+      <div>${esc(d.title || '(제목 없음)')}</div>
+      <div class="row-type">${esc(d.type || '')}</div>
+      <div class="row-time">${esc(d.ts ? fmtTs(d.ts) : '')}</div>
+      <div class="dft-acts">
+        <button class="load-btn" onclick="loadDraft('${d.id}')">불러오기</button>
+        <button class="del-btn" onclick="removeDraft('${d.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateConfirmedList() {
+  const has = st.confirmed.length > 0;
+  g('cf-count').textContent = st.confirmed.length + '건';
+  g('tbl-head').style.display = has ? 'grid' : 'none';
+  g('cf-empty').style.display = has ? 'none' : '';
+  // 부적합 제안 일련번호(시간순) 부여
+  const badNo = new Map();
+  st.confirmed.filter(r => r.judgment === '부적합')
+    .slice().sort((a, b) => (a.ts || 0) - (b.ts || 0))
+    .forEach((r, i) => badNo.set(r.id, i + 1));
+  g('tbl-rows').innerHTML = st.confirmed.map(r => `
+    <div class="tbl-row">
+      <div class="row-no">${esc(r.no)}</div>
+      <div>${esc(r.proposer || '-')}</div>
+      <div>${esc(r.title)}</div>
+      <div class="row-type">${esc(r.type)}</div>
+      <div>${badgeHtml(r.judgment)}${r.judgment === '부적합' ? ` <span class="bad-no">#${badNo.get(r.id)}</span>` : ''}</div>
+      <div class="row-op"><span class="op-text">${esc(r.opinion)}</span><button class="op-copy" title="심사평 복사" onclick="copyOpinion(this)">복사</button></div>
+      <div class="row-time"><span>${esc(r.time)}</span><button class="del-btn" onclick="removeRow('${r.id}')">삭제</button></div>
+    </div>`).join('');
+  updateStatus();
+}
+
+// ── 제안현황 (월별 안전제안 KPI) ──────────────────────────────
+// 안전관련 제안 = 안전 여부 체크됨 OR Near Miss 유형
+function isSafety(r) { return r.safety === true || r.type === 'Near Miss'; }
+function teamOf(r)   { return r.dept || '(미상)'; }
+function personOf(r) { return r.proposer || '(미상)'; }
+function ymOf(d)     { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function monthKey(r) {
+  if (r.pdate && /^\d{4}-\d{2}/.test(r.pdate)) return r.pdate.slice(0, 7);
+  return ymOf(new Date(r.ts || Date.now()));
+}
+const KPI_TARGET = 50;   // %
+
+// 부적합 제안은 실적에서 제외
+function isPerf(r) { return r.judgment !== '부적합'; }
+// 대상 인원: 직접 입력한 부서 인원(rosters) 우선, 없으면 전체 기간 실적 등록 인원 수(부적합 제외)
+function memberCount(team) {
+  if (st.rosters[team] > 0) return st.rosters[team];
+  return new Set(st.confirmed.filter(r => teamOf(r) === team && isPerf(r)).map(personOf)).size;
+}
+
+function updateStatus() {
+  if (!g('status-view')) return;
+  const rows = st.confirmed;
+  const teams = [...new Set(rows.map(teamOf))].sort((a, b) => a.localeCompare(b, 'ko'));
+
+  // 월 드롭다운 (데이터에 있는 월 + 이번 달, 최신순)
+  const monthsSet = new Set(rows.map(monthKey));
+  monthsSet.add(ymOf(new Date()));
+  const months = [...monthsSet].sort((a, b) => (a < b ? 1 : -1));
+  const msel = g('month-sel');
+  const mcur = msel.value || ymOf(new Date());
+  msel.innerHTML = `<option value="전체">전체 기간</option>` +
+    months.map(m => `<option value="${m}">${m.replace('-', '.')}</option>`).join('');
+  msel.value = (mcur === '전체' || months.includes(mcur)) ? mcur : ymOf(new Date());
+  const month = msel.value;
+
+  // 팀 드롭다운 (선택값 유지)
+  const sel = g('team-sel');
+  const cur = sel.value || '전체';
+  sel.innerHTML = `<option value="전체">전체</option>` +
+    teams.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  sel.value = (cur === '전체' || teams.includes(cur)) ? cur : '전체';
+  const scope = sel.value;
+
+  // 부적합 제안은 실적에서 제외하고, 선택 월로 필터
+  const valid = rows.filter(isPerf);
+  const monthRows = month === '전체' ? valid : valid.filter(r => monthKey(r) === month);
+  const monthLabel = month === '전체' ? '전체 기간' : month.replace('-', '.');
+
+  // 팀별: 분자 = 해당 월 안전제안 제출 인원, 분모 = 대상 인원
+  const safeMembersOf = team => new Set(monthRows.filter(r => teamOf(r) === team && isSafety(r)).map(personOf)).size;
+  const safeCountOf   = team => monthRows.filter(r => teamOf(r) === team && isSafety(r)).length;
+
+  // ── 요약(선택 범위) ──
+  let mem, safe, cnt;
+  if (scope === '전체') {
+    mem  = teams.reduce((s, t) => s + memberCount(t), 0);
+    safe = teams.reduce((s, t) => s + safeMembersOf(t), 0);
+    cnt  = monthRows.filter(isSafety).length;
+  } else {
+    mem = memberCount(scope); safe = safeMembersOf(scope); cnt = safeCountOf(scope);
+  }
+  const pct = mem ? (safe / mem * 100) : 0;
+  const pass = mem > 0 && pct >= KPI_TARGET;
+
+  g('kpi-pct').textContent          = Math.round(pct) + '%';
+  g('kpi-scope').textContent        = `${scope} · ${monthLabel}`;
+  g('kpi-members').textContent      = mem;
+  g('kpi-safe-members').textContent = safe;
+  g('kpi-safe-count').textContent   = cnt;
+  const fill = g('kpi-fill');
+  fill.style.width = Math.min(100, pct).toFixed(1) + '%';
+  fill.style.background = pass ? 'var(--good-fg)' : 'var(--bad-fg)';
+  const verdict = g('kpi-verdict');
+  verdict.textContent = mem === 0 ? '대상 인원 없음 (대상 인원을 입력하세요)'
+    : (pass ? '✓ KPI 달성 (50% 이상)' : `✗ KPI 미달 (목표 50%, 현재 ${Math.round(pct)}%)`);
+  verdict.className = 'kpi-verdict ' + (mem === 0 ? '' : (pass ? 'ok' : 'miss'));
+
+  // ── 팀별 KPI 테이블 (대상 인원 입력칸) ──
+  const teamBody = teams.map(t => {
+    const m = memberCount(t), sm = safeMembersOf(t), p = m ? sm / m * 100 : 0, ok = m > 0 && p >= KPI_TARGET;
+    const rosterVal = st.rosters[t] > 0 ? st.rosters[t] : '';
+    const autoN = new Set(valid.filter(r => teamOf(r) === t).map(personOf)).size;
+    return `<tr class="${t === scope ? 'row-sel' : ''}">
+      <td class="name-col">${esc(t)}</td>
+      <td><input class="roster-inp" type="number" min="0" value="${rosterVal}" placeholder="${autoN}"
+           onchange="setRoster('${esc(t)}', this.value)" title="비우면 자동(${autoN}명)"></td>
+      <td>${sm}</td>
+      <td class="${ok ? 'cell-ok' : 'cell-miss'}">${Math.round(p)}%</td>
+      <td>${m === 0 ? '-' : (ok ? '<span class="badge bg-good">달성</span>' : '<span class="badge bg-bad">미달</span>')}</td>
+    </tr>`;
+  }).join('');
+  g('team-kpi-table').innerHTML =
+    `<thead><tr><th class="name-col">팀 / 부서</th><th>대상 인원</th><th>안전제안 제출</th><th>달성률</th><th>KPI 50%</th></tr></thead>` +
+    `<tbody>${teamBody || '<tr><td class="name-col stat-empty">확정 제안이 없습니다.</td><td></td><td></td><td></td><td></td></tr>'}</tbody>`;
+
+  // ── 인원별 상세 (선택 범위·선택 월, 미제출자 우선) ──
+  const detailRows = scope === '전체' ? monthRows : monthRows.filter(r => teamOf(r) === scope);
+  const byPerson = new Map();
+  detailRows.forEach(r => {
+    const p = personOf(r), e = byPerson.get(p) || { total: 0, safe: 0, team: teamOf(r) };
+    e.total++; if (isSafety(r)) e.safe++;
+    byPerson.set(p, e);
+  });
+  const memBody = [...byPerson.entries()]
+    .sort((a, b) => (a[1].safe > 0) - (b[1].safe > 0) || a[0].localeCompare(b[0], 'ko'))
+    .map(([p, e]) => {
+      const ok = e.safe > 0;
+      return `<tr>
+        <td class="name-col">${esc(p)}</td>
+        <td>${esc(e.team)}</td>
+        <td>${ok ? '<span class="badge bg-good">제출</span>' : '<span class="badge bg-bad">미제출</span>'}</td>
+        <td class="${ok ? 'cell-ok' : 'cell-miss'}">${e.safe}</td>
+        <td>${e.total - e.safe}</td>
+      </tr>`;
+    }).join('');
+  g('member-scope').textContent = `· ${scope} · ${monthLabel} (제안 등록자 기준)`;
+  g('member-table').innerHTML =
+    `<thead><tr><th class="name-col">제안자</th><th>팀/부서</th><th>안전제안</th><th>안전 건수</th><th>일반 건수</th></tr></thead>` +
+    `<tbody>${memBody || '<tr><td class="name-col stat-empty">해당 기간 제안이 없습니다.</td><td></td><td></td><td></td><td></td></tr>'}</tbody>`;
+}
+
+// ── CSV ───────────────────────────────────────────────────────
+function exportCSV() {
+  if (!st.confirmed.length) { alert('내보낼 확정 제안이 없습니다.'); return; }
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const head = ['제안번호','제안자','팀/부서','제목','유형','판정','심사평','확정일시'];
+  const lines = [head.map(q).join(',')];
+  st.confirmed.forEach(r => lines.push([r.no, r.proposer, r.dept, r.title, r.type, r.judgment, r.opinion, r.time].map(q).join(',')));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  a.href = url;
+  a.download = `확정목록_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Gemini 설정 모달 ──────────────────────────────────────────
+function openApiModal() {
+  g('api-key-inp').value = st.geminiKey;
+  g('model-sel').value = st.geminiModel;
+  g('api-modal').style.display = 'flex';
+  setTimeout(() => g('api-key-inp').focus(), 80);
+}
+function closeApiModal() { g('api-modal').style.display = 'none'; }
+function saveApiKey() {
+  st.geminiKey = g('api-key-inp').value.trim();
+  st.geminiModel = g('model-sel').value;
+  try {
+    localStorage.setItem('jesim_gemini_key', st.geminiKey);
+    localStorage.setItem('jesim_gemini_model', st.geminiModel);
+  } catch(e) {}
+  updateApiBtn();
+  closeApiModal();
+}
+function updateApiBtn() {
+  const btn = g('api-btn');
+  btn.classList.toggle('set', !!st.geminiKey);
+  btn.title = (st.geminiKey ? '✓ Gemini 키 설정됨' : '⚠ Gemini 키 미설정') + ' · 모델: ' + st.geminiModel;
+}
+
+// ── Gemini API ────────────────────────────────────────────────
+const GEMINI_FALLBACKS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+const isQuotaErr = m => /quota|RESOURCE_EXHAUSTED|limit:\s*0|\b429\b/i.test(m || '');
+
+async function callGeminiModel(model, parts, json, maxTokens) {
+  const key = st.geminiKey || GEMINI_KEY_DEFAULT;
+  const body = {
+    contents: [{ role: 'user', parts }],
+    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.6 },
+  };
+  if (json) body.generationConfig.responseMimeType = 'application/json';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Gemini 오류 (HTTP ${res.status})`);
+  }
+  const data = await res.json();
+  const cand = data.candidates && data.candidates[0];
+  if (cand && cand.finishReason === 'SAFETY') throw new Error('Gemini 안전 필터로 응답이 차단되었습니다.');
+  const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p => p.text || '').join('') : '';
+  if (!text) throw new Error('Gemini 응답이 비어 있습니다.');
+  return text;
+}
+
+async function callGemini(parts, { json = false, maxTokens = 2048 } = {}) {
+  if (!(st.geminiKey || GEMINI_KEY_DEFAULT)) throw new Error('Gemini API 키가 설정되어 있지 않습니다.');
+  const preferred = st.geminiModel || GEMINI_MODEL_DEFAULT;
+  const tryList = [preferred, ...GEMINI_FALLBACKS.filter(m => m !== preferred)];
+  let lastErr;
+  for (const model of tryList) {
+    try {
+      return await callGeminiModel(model, parts, json, maxTokens);
+    } catch (e) {
+      lastErr = e;
+      if (!isQuotaErr(e.message)) throw e;   // 할당량 외 오류(키 오류 등)는 즉시 중단
+      console.warn(`[gemini] ${model} 할당량 초과 → 다음 모델 시도`);
+    }
+  }
+  if (isQuotaErr(lastErr && lastErr.message)) {
+    throw new Error('모든 Gemini 무료 모델의 할당량이 0입니다.\n이 API 키에는 무료 사용량이 없는 것 같습니다.\n개인 Google 계정으로 aistudio.google.com/apikey 에서 새 키(AIza…)를 발급해 ⚙ Gemini 키에 입력해 주세요.');
+  }
+  throw lastErr;
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+const g = id => document.getElementById(id);
+
+// 클립보드 복사 + 버튼 라벨 잠깐 '복사됨'
+function copyText(text, btn) {
+  const done = () => { if (btn) { const o = btn.textContent; btn.textContent = '복사됨'; setTimeout(() => { btn.textContent = o === '복사됨' ? '복사' : o; }, 1500); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => { fallbackCopy(text); done(); });
+  } else { fallbackCopy(text); done(); }
+}
+function fallbackCopy(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  } catch (e) {}
+}
+
+function fmtTs(ts) {
+  const d = new Date(ts), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function badgeHtml(j) {
+  const cls = j === '적합' ? 'bg-good' : j === '부적합' ? 'bg-bad' : j === '보완필요' ? 'bg-warn' : 'bg-pre';
+  return `<span class="badge ${cls}">${esc(j)}</span>`;
+}
+
+// ── Expose handlers for inline onclick (module scope) ─────────
+Object.assign(window, {
+  st,   // inline oninput="st.x=this.value" 핸들러가 참조 (모듈 스코프 노출)
+  setTab, pickFile, onFileChange, clearAttach, runAI,
+  selectProposal, copyProposal, saveConfirmed, removeRow,
+  saveDraft, loadDraft, removeDraft, updateStatus, setRoster,
+  exportCSV, openApiModal, closeApiModal, saveApiKey, importAttached, resetForm,
+  onManualJudgment, onManualInput, copyText, copyOpinion,
+});
+
+init();
+</script>
+</body>
+</html>
